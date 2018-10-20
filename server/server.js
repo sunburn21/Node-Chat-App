@@ -1,6 +1,7 @@
 const http = require('http');
 const express = require('express');
-const socketIO = require('socket.io')
+const socketIO = require('socket.io');
+const { generateMessage } = require('./utils/message');
 const app = express();
 const path = require('path');
 const port = process.env.PORT || 3000;
@@ -15,29 +16,16 @@ io.on('connection', (socket) => {
     // socket.emit('newMessage', {
     //     
     // });
-    socket.emit('newMessage', {
-        from: 'Admin',
-        text: "Welcome to the chatroom!",
-        createdAt: new Date
-    });
-    socket.broadcast.emit('newMessage', {
-        from: 'Admin',
-        text: "New user joined!",
-        createdAt: new Date
-    });
-    socket.on('createMessage', (data) => {
-        socket.broadcast.emit('newMessage', {
-            // from: "Sunny",
-            // text: "Something just like this!",
-            // createdAt: new Date
-            from: data.from,
-            text: data.text,
-            createdAt: new Date
-        })
+    socket.emit('newMessage', generateMessage('Admin', 'Welcome to chat'));
+    socket.broadcast.emit('newMessage', generateMessage('Admin', 'New user added!'));
+    socket.on('createMessage', (data, callback) => {
+        io.emit('newMessage', generateMessage(data.from, data.text));
+        callback('Successfully completed!');
     })
+
 })
 
-app.use(express.static(publicPath))
+app.use(express.static(publicPath));
 server.listen(port, () => {
     console.log('Server is up!');
 })
